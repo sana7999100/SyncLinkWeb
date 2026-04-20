@@ -24,7 +24,7 @@ var NEW_UPDATES = "https://openlibrary.org/subjects/fantasy.json?limit=10";
 var TRENDING = "https://openlibrary.org/trending/daily.json";
 var TOP_WEEK = "https://openlibrary.org/trending/weekly.json";
 
-// --- Fetch and display books ---
+// --- Fetch and display books -------------------
 async function fetchBooks(url, containerId) {
   var container = document.getElementById(containerId);
   if (!container) return;
@@ -32,16 +32,23 @@ async function fetchBooks(url, containerId) {
     var res = await fetch(url);
     var data = await res.json();
     var books = data.works || data.docs || [];
-    container.innerHTML = books.map(book => `
+    
+    container.innerHTML = books.map(book => {
+      // Build the URL to the Open Library reader
+      const bookUrl = `https://openlibrary.org${book.key}`; 
+      
+      return `
       <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-        <img src="https://covers.openlibrary.org/b/id/${book.cover_id || 240727}-M.jpg" alt="${book.title}">
-        <p>${book.title}</p>
+        <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+          <img src="https://openlibrary.org{book.cover_id || 240727}-M.jpg" alt="${book.title}">
+          <p>${book.title}</p>
+        </a>
         <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
       </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
     container.innerHTML = "Error loading books.";
-    console.error(err);
   }
 }
 
