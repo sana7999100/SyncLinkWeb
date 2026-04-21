@@ -1,13 +1,10 @@
-// FIREBASE IMPORT 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+// --- FIREBASE IMPORTS ---
+import { initializeApp } from ";"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-
-
-// FIREBASE CONFIG
+// --- FIREBASE CONFIG ---
 var firebaseConfig = {
-  var firebaseConfig = {
   apiKey: "AIzaSyA3IoxFFqgbHGwfe_mS_UXkZA0GmQfrL_o",
   authDomain: "synclink-11d54.firebaseapp.com",
   projectId: "synclink-11d54",
@@ -17,18 +14,17 @@ var firebaseConfig = {
   measurementId: "G-RYLTVTC73P"
 };
 
-
-// INIT FIREBASE
+// --- INIT FIREBASE ---
 var app = initializeApp(firebaseConfig);
 var auth = getAuth(app);
 var db = getFirestore(app);
 
-// OPEN LIBRARY API 
+// --- OPEN LIBRARY API ENDPOINTS ---
 var NEW_UPDATES = "https://openlibrary.org/subjects/fantasy.json?limit=10";
 var TRENDING = "https://openlibrary.org/trending/daily.json";
 var TOP_WEEK = "https://openlibrary.org/trending/weekly.json";
 
-// FETCH AND DISPLAY BOOKS
+// --- Fetch and display books -------------------
 async function fetchBooks(url, containerId) {
   var container = document.getElementById(containerId);
   if (!container) return;
@@ -37,16 +33,18 @@ async function fetchBooks(url, containerId) {
     var data = await res.json();
     var books = data.works || data.docs || [];
     container.innerHTML = books.map(book => {
-      // UsING cover_id OR cover_i and provide a fallback image
-      const id = book.cover_id || book.cover_i;
-      const img = id ? `https://openlibrary.org{id}-M.jpg` : `https://placeholder.com`;
-      // READER LINK
-      const link = `https://openlibrary.org${book.key}`;
+      // Using a placeholder image if cover_id is missing
+      const coverImg = book.cover_id 
+        ? `https://openlibrary.org{book.cover_id}-M.jpg` 
+        : `https://placeholder.com`;
+      
+      //reader link
+      const bookUrl = `https://openlibrary.org${book.key}`;
 
       return `
         <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-          <a href="${link}" target="_blank" style="text-decoration:none; color:inherit;">
-            <img src="${img}" alt="${book.title}">
+          <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img src="${coverImg}" alt="${book.title}">
             <p>${book.title}</p>
           </a>
           <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
@@ -55,50 +53,10 @@ async function fetchBooks(url, containerId) {
     }).join('');
   } catch (err) {
     container.innerHTML = "Error loading books.";
-    console.error(err);
   }
 }
 
-//  Search Function
-async function searchNovels() {
-  var query = document.getElementById('search-box').value;
-  var container = document.getElementById('novel-slider'); // Targets the main slider area
-  if (!query) return;
-  
-  container.innerHTML = "Searching...";
-  
-  try {
-    var res = await fetch(`https://openlibrary.org{encodeURIComponent(query)}&limit=10`);
-    var data = await res.json();
-    var books = data.docs || [];
-    
-    if (books.length === 0) {
-        container.innerHTML = "No books found.";
-        return;
-    }
-
-    container.innerHTML = books.map(book => {
-      const id = book.cover_i || book.cover_id;
-      const img = id ? `https://openlibrary.org{id}-M.jpg` : `https://placeholder.com`;
-      const link = `https://openlibrary.org${book.key}`;
-
-      return `
-        <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-          <a href="${link}" target="_blank" style="text-decoration:none; color:inherit;">
-            <img src="${img}" alt="${book.title}">
-            <p>${book.title}</p>
-          </a>
-          <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    container.innerHTML = "Search failed. Check your connection.";
-    console.error(err);
-  }
-}
-
-// SAVE ACTIVITY TO LOCALSTORAGE
+// --- Save activity to localStorage ---
 function saveActivity(title, type) {
   var key = type === 'history' ? 'sync_history' : 'sync_bookmarks';
   var data = JSON.parse(localStorage.getItem(key)) || [];
@@ -108,7 +66,8 @@ function saveActivity(title, type) {
   }
   if (type === 'history') showHistory();
 }
-// SHOW HISTORY
+
+// --- Show history ---
 function showHistory() {
   var hist = JSON.parse(localStorage.getItem('sync_history')) || [];
   var container = document.getElementById('history-list');
@@ -116,7 +75,8 @@ function showHistory() {
     container.innerHTML = hist.length ? hist.map(t => `<p>• ${t}</p>`).join('') : "No history yet.";
   }
 }
-// PROFIOLE PAGE MENU LOGIC
+
+// --- Profile page menu logic ---
 function showData(type) {
   var content = document.getElementById('view-content');
   var title = document.getElementById('view-title');
@@ -124,7 +84,7 @@ function showData(type) {
 
   if (type === 'profile') {
     title.innerText = "PROFILE";
-    content.innerHTML = `<p>Logged in as: ${auth.currentUser ? auth.currentUser.email : 'Guest'}</p>`;
+    content.innerHTML = "<p>User profile info here.</p>";
   } else if (type === 'bookmarks') {
     var bookm = JSON.parse(localStorage.getItem('sync_bookmarks')) || [];
     title.innerText = "YOUR BOOKMARKS";
@@ -136,7 +96,7 @@ function showData(type) {
     title.innerText = "READING HISTORY";
     var hist = JSON.parse(localStorage.getItem('sync_history')) || [];
     content.innerHTML = hist.length ? hist.map(t => `<p>• ${t}</p>`).join('') : "No history found.";
-    } else if (type === 'notifications') {
+  } else if (type === 'notifications') {
     title.innerText = "NOTIFICATIONS";
     content.innerHTML = "<p>No new notifications.</p>";
   } else if (type === 'genre') {
@@ -148,23 +108,42 @@ function showData(type) {
   } else if (type === 'reviews') {
     title.innerText = "REVIEWS";
     content.innerHTML = "<p>No reviews yet.</p>";
+  }
+}
+window.showData = showData;
 
+// --- Search function ---
+async function searchNovels() {
+  var query = document.getElementById('search-box').value;
+  var container = document.getElementById('novel-slider');
+  if (!query) return;
+  try {
+    var res = await fetch(`https://openlibrary.org{encodeURIComponent(query)}&limit=10`);
+    var data = await res.json();
+    var books = data.docs || [];
+    container.innerHTML = books.map(book => {
+      // Matching the same link logic as the main slider
+      const coverImg = book.cover_i 
+        ? `https://openlibrary.org{book.cover_i}-M.jpg` 
+        : `https://placeholder.com`;
+      const bookUrl = `https://openlibrary.org${book.key}`;
+
+      return `
+        <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
+           <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img src="${coverImg}" alt="${book.title}" style="width:100%; height:180px; object-fit:cover;">
+            <p>${book.title}</p>
+          </a>
+          <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = "Search failed.";
   }
 }
 
-// --- Firebase Auth Logic ---
-const signupBtn = document.getElementById('signup-btn');
-if (signupBtn) {
-  signupBtn.onclick = () => {
-    const email = document.getElementById('signup-email').value;
-    const pass = document.getElementById('signup-password').value;
-    createUserWithEmailAndPassword(auth, email, pass)
-      .then(() => alert("Success! Account created."))
-      .catch(err => alert(err.message));
-  };
-}
-
-// SIGN UP 
+// --- SIGN UP ---
 var signupBtn = document.getElementById('signup-btn');
 if (signupBtn) {
 	    var email = document.getElementById('signup-email').value;
@@ -218,8 +197,7 @@ if (statusEl) {
   });
 }
 
-// Notifications count 
-
+// --- Notifications count ---
 var notifEl = document.getElementById('notif-count');
 if (notifEl) notifEl.innerText = "";
 
@@ -233,18 +211,12 @@ if (trendingBtn) trendingBtn.addEventListener('click', () => fetchBooks(TRENDING
 var topWeekBtn = document.getElementById('topweek-btn');
 if (topWeekBtn) topWeekBtn.addEventListener('click', () => fetchBooks(TOP_WEEK, 'ranking-list'));
 
-
-// GLOBAL EXPORTS 
+// making functions accessible to html buttons 
 window.saveActivity = saveActivity;
-window.showData = showData;
+window.showHistory = showHistory;
 window.searchNovels = searchNovels;
-window.fetchBooks = fetchBooks;
 
-// Initial Load 
+
+// --- Initial load ---
 fetchBooks(NEW_UPDATES, 'novel-slider');
 showHistory();
-
-// Event listeners for Ranking buttons
-document.getElementById('trending-btn')?.addEventListener('click', () => fetchBooks(TRENDING, 'ranking-list'));
-document.getElementById('topweek-btn')?.addEventListener('click', () => fetchBooks(TOP_WEEK, 'ranking-list'));
-document.getElementById('search-btn')?.addEventListener('click', searchNovels);
