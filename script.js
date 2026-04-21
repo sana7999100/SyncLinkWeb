@@ -1,12 +1,10 @@
-// --- FIREBASE IMPORTS ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://gstatic.com";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://gstatic.com";
+import { getFirestore } from "https://gstatic.com";
 
-// --- FIREBASE CONFIG ---
 var firebaseConfig = {
   apiKey: "AIzaSyA3IoxFFqgbHGwfe_mS_UXkZA0GmQfrL_o",
-  authDomain: "synclink-11d54.firebaseapp.com",
+  authDomain: "://firebaseapp.com",
   projectId: "synclink-11d54",
   storageBucket: "synclink-11d54.firebasestorage.app",
   messagingSenderId: "304027366809",
@@ -14,17 +12,15 @@ var firebaseConfig = {
   measurementId: "G-RYLTVTC73P"
 };
 
-// --- INIT FIREBASE ---
 var app = initializeApp(firebaseConfig);
 var auth = getAuth(app);
 var db = getFirestore(app);
 
-// --- OPEN LIBRARY API ENDPOINTS ---
-var NEW_UPDATES = "https://openlibrary.org/subjects/fantasy.json?limit=10";
-var TRENDING = "https://openlibrary.org/trending/daily.json";
-var TOP_WEEK = "https://openlibrary.org/trending/weekly.json";
+var NEW_UPDATES = "https://openlibrary.org";
+var TRENDING = "https://openlibrary.org";
+var TOP_WEEK = "https://openlibrary.org";
 
-// --- Fetch and display books -------------------
+// --- Main function to show books ---
 async function fetchBooks(url, containerId) {
   var container = document.getElementById(containerId);
   if (!container) return;
@@ -33,18 +29,15 @@ async function fetchBooks(url, containerId) {
     var data = await res.json();
     var books = data.works || data.docs || [];
     container.innerHTML = books.map(book => {
-      // Using a placeholder image if cover_id is missing
-      const coverImg = book.cover_id 
-        ? `https://openlibrary.org{book.cover_id}-M.jpg` 
-        : `https://placeholder.com`;
-      
-      //reader link
-      const bookUrl = `https://openlibrary.org${book.key}`;
+      // Use cover_id OR cover_i and provide a fallback image
+      const id = book.cover_id || book.cover_i;
+      const img = id ? `https://openlibrary.org{id}-M.jpg` : `https://placeholder.com`;
+      const link = `https://openlibrary.org${book.key}`;
 
       return `
         <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-          <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
-            <img src="${coverImg}" alt="${book.title}">
+          <a href="${link}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img src="${img}" alt="${book.title}">
             <p>${book.title}</p>
           </a>
           <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
@@ -53,10 +46,50 @@ async function fetchBooks(url, containerId) {
     }).join('');
   } catch (err) {
     container.innerHTML = "Error loading books.";
+    console.error(err);
   }
 }
 
-// --- Save activity to localStorage ---
+// --- Fixed Search Function ---
+async function searchNovels() {
+  var query = document.getElementById('search-box').value;
+  var container = document.getElementById('novel-slider'); // Targets the main slider area
+  if (!query) return;
+  
+  container.innerHTML = "Searching...";
+  
+  try {
+    var res = await fetch(`https://openlibrary.org{encodeURIComponent(query)}&limit=10`);
+    var data = await res.json();
+    var books = data.docs || [];
+    
+    if (books.length === 0) {
+        container.innerHTML = "No books found.";
+        return;
+    }
+
+    container.innerHTML = books.map(book => {
+      const id = book.cover_i || book.cover_id;
+      const img = id ? `https://openlibrary.org{id}-M.jpg` : `https://placeholder.com`;
+      const link = `https://openlibrary.org${book.key}`;
+
+      return `
+        <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
+          <a href="${link}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img src="${img}" alt="${book.title}">
+            <p>${book.title}</p>
+          </a>
+          <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    container.innerHTML = "Search failed. Check your connection.";
+    console.error(err);
+  }
+}
+
+// --- Save & Profile Logic ---
 function saveActivity(title, type) {
   var key = type === 'history' ? 'sync_history' : 'sync_bookmarks';
   var data = JSON.parse(localStorage.getItem(key)) || [];
@@ -67,7 +100,6 @@ function saveActivity(title, type) {
   if (type === 'history') showHistory();
 }
 
-// --- Show history ---
 function showHistory() {
   var hist = JSON.parse(localStorage.getItem('sync_history')) || [];
   var container = document.getElementById('history-list');
@@ -76,7 +108,6 @@ function showHistory() {
   }
 }
 
-// --- Profile page menu logic ---
 function showData(type) {
   var content = document.getElementById('view-content');
   var title = document.getElementById('view-title');
@@ -84,7 +115,7 @@ function showData(type) {
 
   if (type === 'profile') {
     title.innerText = "PROFILE";
-    content.innerHTML = "<p>User profile info here.</p>";
+    content.innerHTML = `<p>Logged in as: ${auth.currentUser ? auth.currentUser.email : 'Guest'}</p>`;
   } else if (type === 'bookmarks') {
     var bookm = JSON.parse(localStorage.getItem('sync_bookmarks')) || [];
     title.innerText = "YOUR BOOKMARKS";
@@ -96,127 +127,55 @@ function showData(type) {
     title.innerText = "READING HISTORY";
     var hist = JSON.parse(localStorage.getItem('sync_history')) || [];
     content.innerHTML = hist.length ? hist.map(t => `<p>• ${t}</p>`).join('') : "No history found.";
-  } else if (type === 'notifications') {
-    title.innerText = "NOTIFICATIONS";
-    content.innerHTML = "<p>No new notifications.</p>";
-  } else if (type === 'genre') {
-    title.innerText = "BLACK GENRE";
-    fetchBooks("https://openlibrary.org/subjects/black.json?limit=10", 'view-content');
-  } else if (type === 'comments') {
-    title.innerText = "COMMENTS";
-    content.innerHTML = "<p>No comments yet.</p>";
-  } else if (type === 'reviews') {
-    title.innerText = "REVIEWS";
-    content.innerHTML = "<p>No reviews yet.</p>";
-  }
-}
-window.showData = showData;
-
-// --- Search function ---
-async function searchNovels() {
-  var query = document.getElementById('search-box').value;
-  var container = document.getElementById('novel-slider');
-  if (!query) return;
-  try {
-    var res = await fetch(`https://openlibrary.org{encodeURIComponent(query)}&limit=10`);
-    var data = await res.json();
-    var books = data.docs || [];
-    container.innerHTML = books.map(book => {
-      // Matching the same link logic as the main slider
-      const coverImg = book.cover_i 
-        ? `https://openlibrary.org{book.cover_i}-M.jpg` 
-        : `https://placeholder.com`;
-      const bookUrl = `https://openlibrary.org${book.key}`;
-
-      return `
-        <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-           <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
-            <img src="${coverImg}" alt="${book.title}" style="width:100%; height:180px; object-fit:cover;">
-            <p>${book.title}</p>
-          </a>
-          <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    container.innerHTML = "Search failed.";
   }
 }
 
-// --- SIGN UP ---
-var signupBtn = document.getElementById('signup-btn');
+// --- Firebase Auth Logic ---
+const signupBtn = document.getElementById('signup-btn');
 if (signupBtn) {
-  signupBtn.addEventListener('click', function() {
-    var email = document.getElementById('signup-email').value;
-    var password = document.getElementById('signup-password').value;
-    createUserWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert("Account created for " + userCredential.user.email);
-      })
-      .catch(err => {
-        alert("Sign‑up failed: " + err.message);
-      });
-  });
+  signupBtn.onclick = () => {
+    const email = document.getElementById('signup-email').value;
+    const pass = document.getElementById('signup-password').value;
+    createUserWithEmailAndPassword(auth, email, pass)
+      .then(() => alert("Success! Account created."))
+      .catch(err => alert(err.message));
+  };
 }
 
-// --- LOGIN ---
-var loginBtn = document.getElementById('login-btn');
+const loginBtn = document.getElementById('login-btn');
 if (loginBtn) {
-  loginBtn.addEventListener('click', function() {
-    var email = document.getElementById('login-email').value;
-    var password = document.getElementById('login-password').value;
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert("Logged in as " + userCredential.user.email);
-      })
-      .catch(err => {
-        alert("Login failed: " + err.message);
-      });
-  });
+  loginBtn.onclick = () => {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    signInWithEmailAndPassword(auth, email, pass)
+      .then(() => alert("Logged in!"))
+      .catch(err => alert(err.message));
+  };
 }
 
-// --- LOGOUT ---
-var logoutBtn = document.getElementById('logout-btn');
+const logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', function() {
-    signOut(auth).then(() => {
-      alert("Logged out!");
-    }).catch(err => console.error(err));
-  });
+  logoutBtn.onclick = () => {
+    signOut(auth).then(() => alert("Logged out!"));
+  };
 }
 
-// --- USER STATE ---
-var statusEl = document.getElementById('user-status');
-if (statusEl) {
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      statusEl.innerText = "Logged in as " + user.email;
-    } else {
-      statusEl.innerText = "Not logged in";
-    }
-  });
-}
+onAuthStateChanged(auth, user => {
+  const status = document.getElementById('user-status');
+  if (status) status.innerText = user ? `Logged in as ${user.email}` : "Not logged in";
+});
 
-// --- Notifications count ---
-var notifEl = document.getElementById('notif-count');
-if (notifEl) notifEl.innerText = "";
-
-// --- Event listeners ---
-var searchBtn = document.getElementById('search-btn');
-if (searchBtn) searchBtn.addEventListener('click', searchNovels);
-
-var trendingBtn = document.getElementById('trending-btn');
-if (trendingBtn) trendingBtn.addEventListener('click', () => fetchBooks(TRENDING, 'ranking-list'));
-
-var topWeekBtn = document.getElementById('topweek-btn');
-if (topWeekBtn) topWeekBtn.addEventListener('click', () => fetchBooks(TOP_WEEK, 'ranking-list'));
-
-// making functions accessible to html buttons 
+// --- GLOBAL EXPORTS (Crucial for HTML Buttons) ---
 window.saveActivity = saveActivity;
-window.showHistory = showHistory;
+window.showData = showData;
 window.searchNovels = searchNovels;
+window.fetchBooks = fetchBooks;
 
-
-// --- Initial load ---
+// --- Initial Load ---
 fetchBooks(NEW_UPDATES, 'novel-slider');
 showHistory();
+
+// Event listeners for Ranking buttons
+document.getElementById('trending-btn')?.addEventListener('click', () => fetchBooks(TRENDING, 'ranking-list'));
+document.getElementById('topweek-btn')?.addEventListener('click', () => fetchBooks(TOP_WEEK, 'ranking-list'));
+document.getElementById('search-btn')?.addEventListener('click', searchNovels);
