@@ -1,5 +1,5 @@
 // --- FIREBASE IMPORTS ---
-import { initializeApp } from ";"https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
