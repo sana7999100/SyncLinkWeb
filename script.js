@@ -32,19 +32,23 @@ async function fetchBooks(url, containerId) {
     var res = await fetch(url);
     var data = await res.json();
     var books = data.works || data.docs || [];
-    
     container.innerHTML = books.map(book => {
-      // Build the URL to the Open Library reader
-      const bookUrl = `https://openlibrary.org${book.key}`; 
+      // Using a placeholder image if cover_id is missing
+      const coverImg = book.cover_id 
+        ? `https://openlibrary.org{book.cover_id}-M.jpg` 
+        : `https://placeholder.com`;
       
+      //reader link
+      const bookUrl = `https://openlibrary.org${book.key}`;
+
       return `
-      <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-        <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
-          <img src="https://openlibrary.org{book.cover_id || 240727}-M.jpg" alt="${book.title}">
-          <p>${book.title}</p>
-        </a>
-        <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
-      </div>
+        <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
+          <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img src="${coverImg}" alt="${book.title}">
+            <p>${book.title}</p>
+          </a>
+          <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
+        </div>
       `;
     }).join('');
   } catch (err) {
@@ -114,14 +118,26 @@ async function searchNovels() {
   var container = document.getElementById('novel-slider');
   if (!query) return;
   try {
-    var res = await fetch(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=10`);
+    var res = await fetch(`https://openlibrary.org{encodeURIComponent(query)}&limit=10`);
     var data = await res.json();
     var books = data.docs || [];
-    container.innerHTML = books.map(book => `
-      <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
-        <p>${book.title}</p>
-      </div>
-    `).join('');
+    container.innerHTML = books.map(book => {
+      // Matching the same link logic as the main slider
+      const coverImg = book.cover_i 
+        ? `https://openlibrary.org{book.cover_i}-M.jpg` 
+        : `https://placeholder.com`;
+      const bookUrl = `https://openlibrary.org${book.key}`;
+
+      return `
+        <div class="novel-card" onclick="saveActivity('${book.title}', 'history')">
+           <a href="${bookUrl}" target="_blank" style="text-decoration:none; color:inherit;">
+            <img src="${coverImg}" alt="${book.title}" style="width:100%; height:180px; object-fit:cover;">
+            <p>${book.title}</p>
+          </a>
+          <button onclick="event.stopPropagation(); saveActivity('${book.title}', 'bookmarks')" style="font-size:10px">Bookmark</button>
+        </div>
+      `;
+    }).join('');
   } catch (err) {
     container.innerHTML = "Search failed.";
   }
@@ -194,6 +210,12 @@ if (trendingBtn) trendingBtn.addEventListener('click', () => fetchBooks(TRENDING
 
 var topWeekBtn = document.getElementById('topweek-btn');
 if (topWeekBtn) topWeekBtn.addEventListener('click', () => fetchBooks(TOP_WEEK, 'ranking-list'));
+
+// making functions accessible to html buttons 
+window.saveActivity = saveActivity;
+window.showHistory = showHistory;
+window.searchNovels = searchNovels;
+
 
 // --- Initial load ---
 fetchBooks(NEW_UPDATES, 'novel-slider');
