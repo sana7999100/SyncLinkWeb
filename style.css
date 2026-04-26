@@ -33,6 +33,47 @@ body {
   align-items: center;
 }
 
+.notif {
+  position: relative;
+  color: var(--gray);
+  cursor: pointer;
+}
+
+#notif-count {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  background: var(--accent);
+  color: white;
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 8px;
+}
+
+#search-box {
+  background: #0d1f2d;
+  border: 1px solid var(--border);
+  color: white;
+  padding: 7px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  width: 160px;
+  outline: none;
+}
+
+#search-box:focus {
+  border-color: var(--accent);
+}
+
+#search-btn {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 .profile-btn {
   background: #f39c12;
   padding: 8px;
@@ -48,6 +89,159 @@ body {
   color: var(--gray);
 }
 
+.section-header {
+  color: var(--accent);
+  padding-left: 15px;
+  border-left: 3px solid var(--accent);
+  margin: 20px;
+  font-size: 14px;
+}
+
+/* slider for novel cards */
+.slider {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 20px 12px;
+}
+
+.novel-card {
+  min-width: 130px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.novel-card img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.novel-card p {
+  font-size: 11px;
+  margin-top: 5px;
+  color: #ccc;
+}
+
+.novel-card button {
+  margin-top: 4px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gray);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.novel-card button:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* history items */
+#history-list {
+  padding: 0 20px 10px;
+}
+
+#history-list p {
+  font-size: 13px;
+  color: #ccc;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ranking tabs */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 20px 10px;
+}
+
+.tab {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gray);
+  padding: 7px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.tab:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* auth boxes */
+.auth-box {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.auth-box input {
+  background: #0d1f2d;
+  border: 1px solid var(--border);
+  color: white;
+  padding: 9px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  width: 180px;
+}
+
+.auth-box input:focus {
+  border-color: var(--accent);
+}
+
+.auth-box button {
+  background: var(--accent);
+  border: none;
+  color: white;
+  padding: 9px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.auth-box button:hover {
+  background: #cc2222;
+}
+
+#logout-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--gray);
+}
+
+#logout-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+
+#user-status {
+  font-size: 12px;
+  color: var(--gray);
+  width: 100%;
+  margin: 0;
+}
+
+/* profile page */
 .profile-menu-container {
   padding: 20px;
   display: flex;
@@ -65,6 +259,11 @@ body {
   text-align: center;
 }
 
+.menu-item:hover {
+  background: #0d1f2d;
+  color: white;
+}
+
 .menu-item.active {
   background: #34495e;
   color: white;
@@ -78,37 +277,21 @@ body {
   margin-top: 10px;
 }
 
-.section-header {
+.menu-item.logout:hover {
   color: var(--accent);
-  padding-left: 15px;
+  background: transparent;
+}
+
+.user-avatar-section {
+  padding: 20px;
+}
+
+.user-avatar-section h3 {
+  color: var(--accent);
+  font-size: 13px;
+  padding-left: 12px;
   border-left: 3px solid var(--accent);
-  margin: 20px;
-  font-size: 14px;
-}
-
-.slider {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding: 0 20px;
-}
-
-.novel-card {
-  min-width: 130px;
-  text-align: center;
-}
-
-.novel-card img {
-  width: 100%;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-}
-
-.novel-card p {
-  font-size: 11px;
-  margin-top: 5px;
+  margin-bottom: 14px;
 }
 
 .avatar-placeholder {
@@ -119,4 +302,10 @@ body {
   border-radius: 4px;
   border: 1px dashed var(--border);
   font-size: 13px;
+  color: var(--gray);
+}
+
+.avatar-placeholder p {
+  margin-bottom: 6px;
+  line-height: 1.6;
 }
