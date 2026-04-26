@@ -20,8 +20,8 @@ var db = getFirestore(app);
 
 // api links
 var NEW_UPDATES = "https://openlibrary.org/subjects/fantasy.json?limit=10";
-var TRENDING = "https://openlibrary.org/trending/daily.json";
-var TOP_WEEK = "https://openlibrary.org/trending/weekly.json";
+var TRENDING = "https://openlibrary.org/subjects/adventure.json?limit=10";
+var TOP_WEEK = "https://openlibrary.org/subjects/mystery.json?limit=10";
 
 // this function fetches books from open library and shows them in a container
 async function fetchBooks(url, containerId) {
