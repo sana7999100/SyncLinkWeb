@@ -19,11 +19,17 @@ var auth = getAuth(app);
 var db = getFirestore(app);
 
 // api links
-var NEW_UPDATES = "https://openlibrary.org/subjects/fantasy.json?limit=10";
-var TRENDING = "https://openlibrary.org/subjects/adventure.json?limit=10";
-var TOP_WEEK = "https://openlibrary.org/subjects/mystery.json?limit=10";
+var NEW_UPDATES = "https://gutendex.com/books/?topic=fiction&languages=en";
+var TRENDING    = "https://gutendex.com/books/?sort=popular&languages=en";
+var TOP_WEEK    = "https://gutendex.com/books/?topic=romance&languages=en";
 
-// this function fetches books from open library and shows them in a container
+// opens the book on Project Gutenberg website in a new tab
+function openBook(gutenbergId) {
+  var url = "https://www.gutenberg.org/ebooks/" + gutenbergId;
+  window.open(url, "_blank");
+}
+
+// this function fetches books from gutenberg and shows them in a container
 async function fetchBooks(url, containerId) {
   var container = document.getElementById(containerId);
   if (!container) return;
@@ -31,9 +37,9 @@ async function fetchBooks(url, containerId) {
   container.innerHTML = "Loading...";
 
   try {
-    var res = await fetch(url);
+    var res  = await fetch(url);
     var data = await res.json();
-    var books = data.works || data.docs || [];
+    var books = data.results || [];
 
     if (books.length === 0) {
       container.innerHTML = "No books found.";
@@ -42,18 +48,19 @@ async function fetchBooks(url, containerId) {
 
     var html = "";
     for (var i = 0; i < books.length; i++) {
-      var book = books[i];
+      var book  = books[i];
       var title = book.title || "No Title";
-      // subjects endpoint uses cover_id, trending endpoint uses cover_i
-      var coverId = book.cover_id || book.cover_i || "";
-      var imgUrl = coverId
-        ? "https://covers.openlibrary.org/b/id/" + coverId + "-M.jpg"
+      var id    = book.id || "";
+
+      // get cover image from gutenberg
+      var imgUrl = (book.formats && book.formats["image/jpeg"])
+        ? book.formats["image/jpeg"]
         : "https://via.placeholder.com/130x180?text=No+Cover";
 
-      // encode title so apostrophes dont break the onclick
       var safeTitle = encodeURIComponent(title);
 
-      html += '<div class="novel-card" onclick="saveActivity(decodeURIComponent(\'' + safeTitle + '\'), \'history\')">';
+      // clicking the card opens the book on gutenberg website
+      html += '<div class="novel-card" onclick="openBook(' + id + ')">';
       html += '<img src="' + imgUrl + '" alt="' + title + '">';
       html += '<p>' + title + '</p>';
       html += '<button onclick="event.stopPropagation(); saveActivity(decodeURIComponent(\'' + safeTitle + '\'), \'bookmarks\')">Bookmark</button>';
@@ -70,7 +77,7 @@ async function fetchBooks(url, containerId) {
 
 // saves a book title to history or bookmarks in localStorage
 function saveActivity(title, type) {
-  var key = type === "history" ? "sync_history" : "sync_bookmarks";
+  var key  = type === "history" ? "sync_history" : "sync_bookmarks";
   var data = JSON.parse(localStorage.getItem(key)) || [];
 
   if (!data.includes(title)) {
@@ -85,7 +92,7 @@ function saveActivity(title, type) {
 
 // shows reading history on the main page
 function showHistory() {
-  var hist = JSON.parse(localStorage.getItem("sync_history")) || [];
+  var hist      = JSON.parse(localStorage.getItem("sync_history")) || [];
   var container = document.getElementById("history-list");
   if (!container) return;
 
@@ -100,12 +107,11 @@ function showHistory() {
   }
 }
 
-// search novels using open library search api
+// search novels using gutenberg search
 async function searchNovels() {
   var query = document.getElementById("search-box").value.trim();
   if (!query) return;
 
-  // show search section and hide new updates while searching
   var searchSection = document.getElementById("search-section");
   var searchResults = document.getElementById("search-results");
   if (!searchResults) return;
@@ -114,9 +120,9 @@ async function searchNovels() {
   searchResults.innerHTML = "Searching...";
 
   try {
-    var res = await fetch("https://openlibrary.org/search.json?q=" + encodeURIComponent(query) + "&limit=10");
-    var data = await res.json();
-    var books = data.docs || [];
+    var res   = await fetch("https://gutendex.com/books/?search=" + encodeURIComponent(query));
+    var data  = await res.json();
+    var books = data.results || [];
 
     if (books.length === 0) {
       searchResults.innerHTML = "No results found for: " + query;
@@ -125,17 +131,17 @@ async function searchNovels() {
 
     var html = "";
     for (var i = 0; i < books.length; i++) {
-      var book = books[i];
+      var book  = books[i];
       var title = book.title || "No Title";
-      // search endpoint uses cover_i (not cover_id)
-      var coverId = book.cover_i || "";
-      var imgUrl = coverId
-        ? "https://covers.openlibrary.org/b/id/" + coverId + "-M.jpg"
+      var id    = book.id || "";
+
+      var imgUrl = (book.formats && book.formats["image/jpeg"])
+        ? book.formats["image/jpeg"]
         : "https://via.placeholder.com/130x180?text=No+Cover";
 
       var safeTitle = encodeURIComponent(title);
 
-      html += '<div class="novel-card" onclick="saveActivity(decodeURIComponent(\'' + safeTitle + '\'), \'history\')">';
+      html += '<div class="novel-card" onclick="openBook(' + id + ')">';
       html += '<img src="' + imgUrl + '" alt="' + title + '">';
       html += '<p>' + title + '</p>';
       html += '<button onclick="event.stopPropagation(); saveActivity(decodeURIComponent(\'' + safeTitle + '\'), \'bookmarks\')">Bookmark</button>';
@@ -153,10 +159,9 @@ async function searchNovels() {
 // profile page - show different data based on which menu button was clicked
 function showData(type) {
   var content = document.getElementById("view-content");
-  var title = document.getElementById("view-title");
+  var title   = document.getElementById("view-title");
   if (!content || !title) return;
 
-  // update active button style
   var buttons = document.querySelectorAll(".menu-item");
   for (var i = 0; i < buttons.length; i++) {
     buttons[i].classList.remove("active");
@@ -178,11 +183,7 @@ function showData(type) {
     if (bookm.length === 0) {
       content.innerHTML = "<p>No bookmarks found.</p>";
     } else {
-      var html = "";
-      for (var i = 0; i < bookm.length; i++) {
-        html += "<p>⭐ " + bookm[i] + "</p>";
-      }
-      content.innerHTML = html;
+      content.innerHTML = bookm.map(b => "<p>⭐ " + b + "</p>").join("");
     }
 
   } else if (type === "novels") {
@@ -196,11 +197,7 @@ function showData(type) {
     if (hist.length === 0) {
       content.innerHTML = "<p>No history found.</p>";
     } else {
-      var html = "";
-      for (var i = 0; i < hist.length; i++) {
-        html += "<p>• " + hist[i] + "</p>";
-      }
-      content.innerHTML = html;
+      content.innerHTML = hist.map(h => "<p>• " + h + "</p>").join("");
     }
 
   } else if (type === "notifications") {
@@ -208,9 +205,9 @@ function showData(type) {
     content.innerHTML = "<p>No new notifications.</p>";
 
   } else if (type === "genre") {
-    title.innerText = "BLACK GENRE";
+    title.innerText = "MYSTERY & ADVENTURE";
     content.innerHTML = '<div class="slider" id="view-content-slider">Loading...</div>';
-    fetchBooks("https://openlibrary.org/subjects/black.json?limit=10", "view-content-slider");
+    fetchBooks("https://gutendex.com/books/?topic=mystery&languages=en", "view-content-slider");
 
   } else if (type === "comments") {
     title.innerText = "COMMENTS";
@@ -222,22 +219,22 @@ function showData(type) {
   }
 }
 
-// make showData available globally so the onclick in html can use it
-window.showData = showData;
+// make functions available globally
+window.showData     = showData;
 window.saveActivity = saveActivity;
+window.openBook     = openBook;
 
 // sign up button
 var signupBtn = document.getElementById("signup-btn");
 if (signupBtn) {
   signupBtn.addEventListener("click", function() {
-    var email = document.getElementById("signup-email").value.trim();
+    var email    = document.getElementById("signup-email").value.trim();
     var password = document.getElementById("signup-password").value.trim();
 
     if (!email || !password) {
       alert("Please fill in both email and password.");
       return;
     }
-
     if (password.length < 6) {
       alert("Password must be at least 6 characters.");
       return;
@@ -257,7 +254,7 @@ if (signupBtn) {
 var loginBtn = document.getElementById("login-btn");
 if (loginBtn) {
   loginBtn.addEventListener("click", function() {
-    var email = document.getElementById("login-email").value.trim();
+    var email    = document.getElementById("login-email").value.trim();
     var password = document.getElementById("login-password").value.trim();
 
     if (!email || !password) {
@@ -289,7 +286,7 @@ if (logoutBtn) {
   });
 }
 
-// this watches if user is logged in or not and updates the status text
+// watches login state and updates status text
 var statusEl = document.getElementById("user-status");
 if (statusEl) {
   onAuthStateChanged(auth, function(user) {
@@ -301,7 +298,7 @@ if (statusEl) {
   });
 }
 
-// notification count (empty for now)
+// notification count
 var notifEl = document.getElementById("notif-count");
 if (notifEl) notifEl.innerText = "";
 
@@ -311,17 +308,15 @@ if (searchBtn) {
   searchBtn.addEventListener("click", searchNovels);
 }
 
-// also search when user presses Enter key
+// search on Enter key
 var searchBox = document.getElementById("search-box");
 if (searchBox) {
   searchBox.addEventListener("keypress", function(e) {
-    if (e.key === "Enter") {
-      searchNovels();
-    }
+    if (e.key === "Enter") searchNovels();
   });
 }
 
-// trending tab button
+// trending tab
 var trendingBtn = document.getElementById("trending-btn");
 if (trendingBtn) {
   trendingBtn.addEventListener("click", function() {
@@ -331,7 +326,7 @@ if (trendingBtn) {
   });
 }
 
-// top week tab button
+// top week tab
 var topWeekBtn = document.getElementById("topweek-btn");
 if (topWeekBtn) {
   topWeekBtn.addEventListener("click", function() {
@@ -341,7 +336,7 @@ if (topWeekBtn) {
   });
 }
 
-// load everything when page first opens
+// load everything when page opens
 fetchBooks(NEW_UPDATES, "novel-slider");
 fetchBooks(TRENDING, "ranking-list");
 showHistory();
